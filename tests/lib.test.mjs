@@ -8,7 +8,12 @@ import {
 const seoul = { name: "서울역", lat: 37.5547, lng: 126.9707 };
 
 test("내비 딥링크 — 좌표 있을 때", () => {
-  assert.equal(navUrl("tmap", seoul), `tmap://route?goalname=${encodeURIComponent("서울역")}&goalx=126.9707&goaly=37.5547`);
+  const tm = new URL(navUrl("tmap", seoul).replace("tmap://", "https://x/"));
+  assert.equal(tm.searchParams.get("goalx"), "126.9707", "TMAP x = 경도");
+  assert.equal(tm.searchParams.get("goaly"), "37.5547", "TMAP y = 위도");
+  assert.equal(tm.searchParams.get("rGoX"), "126.9707");
+  assert.equal(tm.searchParams.get("rGoY"), "37.5547");
+  assert.equal(tm.searchParams.get("goalname"), "서울역");
   assert.equal(navUrl("kakao", seoul), "kakaomap://route?ep=37.5547,126.9707&by=CAR");
   assert.match(navUrl("naver", seoul), /^nmap:\/\/navigation\?dlat=37.5547&dlng=126.9707&dname=/);
   assert.equal(navUrl("apple", seoul), "https://maps.apple.com/?daddr=37.5547,126.9707&dirflg=d");

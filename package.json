@@ -1,6 +1,6 @@
 {
   "name": "sportage-carplay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "스포티지 QL 카플레이 스타일 운전 모드 (PWA)",

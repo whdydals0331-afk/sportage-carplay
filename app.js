@@ -4,7 +4,7 @@ import {
   headingLabel, maintenanceStatus, normalizeState, formatKm, timeAgo,
 } from "./lib.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const KEY = "sportage-carplay:v1";
 const $ = (s) => document.querySelector(s);
 
@@ -43,14 +43,33 @@ function toast(msg) {
 function tap() { try { navigator.vibrate?.(15); } catch { /* iOS 는 미지원 */ } }
 function openUrl(url) { if (url) window.location.href = url; }
 
+// 다른 앱(내비·음악)으로 넘기기. 1.5초 뒤에도 이 화면이 그대로 보이면
+// 앱이 안 열린 것 → 설치 여부를 안내 (iOS 는 미설치 앱이면 아무 반응이 없음)
+function openApp(url, label) {
+  if (!url) return;
+  let left = false;
+  const mark = () => { left = true; };
+  document.addEventListener("visibilitychange", mark, { once: true });
+  window.addEventListener("pagehide", mark, { once: true });
+  window.addEventListener("blur", mark, { once: true });
+  openUrl(url);
+  setTimeout(() => {
+    document.removeEventListener("visibilitychange", mark);
+    window.removeEventListener("pagehide", mark);
+    window.removeEventListener("blur", mark);
+    if (!left && document.visibilityState === "visible") toast(`${label} 앱이 열리지 않았습니다. 설치되어 있는지 확인하거나 다른 앱을 골라주세요`);
+  }, 1500);
+}
+
 // ── 화면 전환 ───────────────────────────────────────────
 const RENDER = {};
+const SCREENS = [...document.querySelectorAll(".screen")].map((s) => s.dataset.screen);
 function go(name) {
-  if (!document.querySelector(`[data-screen="${name}"]`)) name = "home";
+  if (!SCREENS.includes(name)) name = "home";
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.dataset.screen === name));
   RENDER[name]?.();
   $(".stage").scrollTop = 0;
-  if (location.hash.slice(1) !== name) history.replaceState(null, "", name === "home" ? location.pathname : `#${name}`);
+  if (location.hash.slice(1) !== name || location.search) history.replaceState(null, "", location.pathname + (name === "home" ? "" : `#${name}`)); // ?dest= 등은 지워서 새로고침 때 다시 실행되지 않게
 }
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-go]");
@@ -157,7 +176,7 @@ RENDER.home = () => {
   const q = $("#quickFavs");
   q.replaceChildren(
     ...state.favorites.slice(0, 4).map((f) =>
-      el("button", { class: "item", onclick: () => { tap(); openUrl(navUrl(state.navApp, f)); } },
+      el("button", { class: "item", onclick: () => { tap(); openApp(navUrl(state.navApp, f), NAV_APPS.find((a) => a.id === state.navApp).label); } },
         el("span", { class: "em" }, f.icon), el("span", { class: "grow" }, f.name))),
   );
 };
@@ -177,7 +196,7 @@ RENDER.nav = () => {
   }
   list.replaceChildren(
     ...state.favorites.map((f) =>
-      el("button", { class: "item", onclick: () => { tap(); openUrl(navUrl(state.navApp, f)); } },
+      el("button", { class: "item", onclick: () => { tap(); openApp(navUrl(state.navApp, f), NAV_APPS.find((a) => a.id === state.navApp).label); } },
         el("span", { class: "em" }, f.icon),
         el("span", { class: "grow" }, f.name,
           el("span", { class: "sub" }, f.lat != null ? "좌표 저장됨" : "이름으로 검색")),
@@ -188,7 +207,7 @@ $("#navSearch").addEventListener("submit", (e) => {
   e.preventDefault();
   const name = $("#navQuery").value.trim();
   if (!name) return;
-  openUrl(navUrl(state.navApp, { name }));
+  openApp(navUrl(state.navApp, { name }), NAV_APPS.find((a) => a.id === state.navApp).label);
 });
 
 // ── 음악 ────────────────────────────────────────────────
@@ -196,7 +215,7 @@ const MUSIC_COLORS = { applemusic: "#fa2d48", melon: "#00cd3c", spotify: "#1db95
 RENDER.music = () => {
   $("#musicList").replaceChildren(
     ...MUSIC_APPS.map((m) =>
-      el("a", { class: "music-tile", href: m.url, style: `--c:${MUSIC_COLORS[m.id]}`, onclick: () => { state.musicApp = m.id; save(); } }, m.label)),
+      el("button", { class: "music-tile", type: "button", style: `--c:${MUSIC_COLORS[m.id]}`, onclick: () => { tap(); state.musicApp = m.id; save(); openApp(m.url, m.label); } }, m.label)),
   );
 };
 
@@ -296,12 +315,25 @@ RENDER.settings = () => {
   segment($("#musicAppSeg"), MUSIC_APPS, state.musicApp, (id) => { state.musicApp = id; save(); RENDER.settings(); });
   $("#ver").textContent = `버전 ${VERSION}`;
 };
+function showFavCoords() {
+  const f = $("#favForm");
+  const lat = Number(f.elements.lat.value), lng = Number(f.elements.lng.value);
+  $("#favCoords").hidden = f.elements.lat.value === "";
+  $("#favCoordsText").textContent = `📍 현재 위치 좌표(${lat.toFixed(4)}, ${lng.toFixed(4)})가 함께 저장됩니다`;
+}
+function clearFavCoords() {
+  const f = $("#favForm");
+  f.elements.lat.value = ""; f.elements.lng.value = "";
+  showFavCoords();
+}
+$("#favCoordsClear").addEventListener("click", clearFavCoords);
 $("#favHere").addEventListener("click", async () => {
   try {
     const p = await currentPosition();
     const f = $("#favForm");
     f.elements.lat.value = p.lat; f.elements.lng.value = p.lng;
     if (!f.elements.name.value) f.elements.name.value = "현재 위치";
+    showFavCoords();
     toast("현재 위치 좌표를 넣었습니다");
   } catch (err) { onPosErr(err); }
 });
@@ -310,7 +342,7 @@ $("#favForm").addEventListener("submit", (e) => {
   const f = e.target;
   if (state.favorites.length >= 8) return toast("목적지는 8개까지입니다");
   state.favorites.push({ name: f.elements.name.value, icon: f.elements.icon.value || "📍", lat: f.elements.lat.value === "" ? null : Number(f.elements.lat.value), lng: f.elements.lng.value === "" ? null : Number(f.elements.lng.value) });
-  state = normalizeState(state); save(); f.reset(); f.elements.lat.value = ""; f.elements.lng.value = ""; RENDER.settings();
+  state = normalizeState(state); save(); f.reset(); clearFavCoords(); RENDER.settings();
 });
 $("#contactForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -336,11 +368,12 @@ $("#importBtn").addEventListener("click", () => {
 // ── 시작: ?go=nav&dest=집 (iOS 단축어 자동화용) ───────────
 const params = new URLSearchParams(location.search);
 const destName = params.get("dest");
+go(params.get("go") || (destName ? "nav" : "") || location.hash.slice(1) || "home"); // 여기서 ?dest 는 주소에서 지워짐
 if (destName) {
+  // 화면이 다 뜬 뒤에 내비를 연다 (로딩 중에 다른 앱을 열면 막히는 경우가 있음)
   const fav = state.favorites.find((f) => f.name === destName) || { name: destName };
-  openUrl(navUrl(state.navApp, fav));
+  window.addEventListener("load", () => setTimeout(() => openApp(navUrl(state.navApp, fav), NAV_APPS.find((a) => a.id === state.navApp).label), 300), { once: true });
 }
-go(params.get("go") || location.hash.slice(1) || "home");
 window.addEventListener("hashchange", () => go(location.hash.slice(1) || "home"));
 
 // ── 오프라인 껍데기 캐시 ─────────────────────────────────

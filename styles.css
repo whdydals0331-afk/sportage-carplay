@@ -170,3 +170,6 @@ h2 { font-size: 17px; color: var(--sub); margin: 24px 0 8px; font-weight: 600; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .maint .grow { white-space: normal; }
 .maint .sub { line-height: 1.35; }
+.coords { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; color: var(--ok); }
+.coords[hidden] { display: none; }
+.link { background: none; border: 0; color: var(--accent); font-size: 14px; padding: 6px; }

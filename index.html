@@ -130,6 +130,11 @@
           <input type="hidden" name="lat" /><input type="hidden" name="lng" />
           <button class="btn primary" type="submit">추가</button>
         </form>
+        <div class="coords" id="favCoords" hidden>
+          <span id="favCoordsText"></span>
+          <button type="button" class="link" id="favCoordsClear">빼기</button>
+        </div>
+        <p class="hint">좌표 없이 이름만 넣으면 내비 앱에서 그 이름으로 검색합니다. 정확하게 안내받으려면 그 장소에서 "현재위치"를 눌러 저장하세요.</p>
 
         <h2>단축 연락처</h2>
         <div class="list" id="contactEdit"></div>

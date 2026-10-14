@@ -1,5 +1,5 @@
 // 앱 화면(껍데기)만 캐시. 내비·음악은 각 앱이 담당하므로 여기서 할 일 없음
-const CACHE = "sportage-carplay-v1.0.0";
+const CACHE = "sportage-carplay-v1.0.1";
 const FILES = ["./", "index.html", "styles.css", "app.js", "lib.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-180.png"];
 
 self.addEventListener("install", (e) => {

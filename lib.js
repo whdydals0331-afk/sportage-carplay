@@ -20,7 +20,9 @@ export function navUrl(appId, dest) {
   switch (appId) {
     case "tmap":
       return c
-        ? `tmap://route?goalname=${q}&goalx=${dest.lng}&goaly=${dest.lat}`
+        // 개발자 자료마다 iOS 는 rGo*, 다른 곳은 goal* 형식을 쓴다고 해서 둘 다 넣음
+        // (모르는 파라미터는 앱이 무시함). x=경도, y=위도
+        ? `tmap://route?referrer=com.skt.Tmap&goalname=${q}&goalx=${dest.lng}&goaly=${dest.lat}&rGoName=${q}&rGoX=${dest.lng}&rGoY=${dest.lat}`
         : `tmap://search?name=${q}`;
     case "kakao":
       return c
