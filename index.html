@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="드라이브" />
+  <title>스포티지 드라이브</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- 왼쪽(가로) / 위쪽(세로) 상태 막대 — 카플레이 사이드바 느낌 -->
+    <aside class="bar">
+      <div class="clock" id="clock">--:--</div>
+      <div class="bar-speed"><span id="barSpeed">–</span><small>km/h</small></div>
+      <button class="bar-btn" data-go="home" aria-label="홈">⌂</button>
+      <button class="bar-btn" id="wakeBtn" aria-label="화면 켜두기" title="화면 켜두기">☀︎</button>
+    </aside>
+
+    <main class="stage">
+      <!-- 홈 -->
+      <section class="screen active" data-screen="home">
+        <div class="home-head">
+          <div>
+            <div class="date" id="date"></div>
+            <div class="car-name">스포티지 QL</div>
+          </div>
+          <div class="chip" id="gpsChip">GPS 대기</div>
+        </div>
+        <div class="tiles">
+          <button class="tile" data-go="nav"><span class="ico" style="--c:#34c759">🧭</span><span>길안내</span></button>
+          <button class="tile" data-go="music"><span class="ico" style="--c:#ff375f">♪</span><span>음악</span></button>
+          <button class="tile" data-go="phone"><span class="ico" style="--c:#30d158">✆</span><span>전화</span></button>
+          <button class="tile" data-go="speed"><span class="ico" style="--c:#0a84ff">⏱</span><span>속도계</span></button>
+          <button class="tile" data-go="parking"><span class="ico" style="--c:#5e5ce6">P</span><span>주차위치</span></button>
+          <button class="tile" data-go="car"><span class="ico" style="--c:#ff9f0a">🔧</span><span>차량관리</span></button>
+          <button class="tile" data-go="settings"><span class="ico" style="--c:#8e8e93">⚙︎</span><span>설정</span></button>
+        </div>
+        <div class="quick" id="quickFavs"></div>
+      </section>
+
+      <!-- 길안내 -->
+      <section class="screen" data-screen="nav">
+        <h1>길안내</h1>
+        <p class="hint">누르면 선택한 내비 앱이 바로 열립니다.</p>
+        <div class="seg" id="navAppSeg"></div>
+        <div class="list big" id="favList"></div>
+        <form class="search" id="navSearch">
+          <input id="navQuery" type="search" placeholder="목적지 검색 (예: 이마트 성수점)" autocomplete="off" enterkeyhint="go" />
+          <button type="submit">안내</button>
+        </form>
+      </section>
+
+      <!-- 음악 -->
+      <section class="screen" data-screen="music">
+        <h1>음악</h1>
+        <p class="hint">소리는 아이폰 블루투스로 차 스피커에 나옵니다.</p>
+        <div class="grid2" id="musicList"></div>
+      </section>
+
+      <!-- 전화 -->
+      <section class="screen" data-screen="phone">
+        <h1>전화</h1>
+        <div class="list big" id="contactList"></div>
+        <div class="row">
+          <a class="btn wide" href="tel:">키패드 열기</a>
+        </div>
+        <p class="hint">통화는 아이폰 블루투스 핸즈프리로 연결됩니다. 운전 중에는 “Siri야, ○○에게 전화해” 가 가장 안전합니다.</p>
+      </section>
+
+      <!-- 속도계 / HUD -->
+      <section class="screen" data-screen="speed">
+        <div class="speedo" id="speedo">
+          <div class="speed-num" id="speedNum">0</div>
+          <div class="speed-unit">km/h</div>
+          <div class="speed-meta">
+            <div><small>방향</small><b id="heading">–</b></div>
+            <div><small>최고</small><b id="maxSpeed">0</b></div>
+            <div><small>주행</small><b id="tripKm">0.0</b></div>
+            <div><small>평균</small><b id="avgSpeed">0</b></div>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="hudBtn">HUD 반전</button>
+          <button class="btn" id="tripReset">주행 초기화</button>
+        </div>
+        <p class="hint">HUD 반전: 밤에 폰을 대시보드에 눕혀두면 앞유리에 속도가 비칩니다. GPS 속도라 계기판과 약간 다를 수 있습니다.</p>
+      </section>
+
+      <!-- 주차 위치 -->
+      <section class="screen" data-screen="parking">
+        <h1>주차 위치</h1>
+        <div class="card" id="parkCard"></div>
+        <input id="parkNote" class="field" placeholder="메모 (예: 지하 2층 B-14)" maxlength="40" />
+        <div class="row">
+          <button class="btn primary wide" id="parkSave">지금 위치 저장</button>
+        </div>
+        <div class="row" id="parkActions"></div>
+      </section>
+
+      <!-- 차량관리 -->
+      <section class="screen" data-screen="car">
+        <h1>차량관리 <small>스포티지 QL</small></h1>
+        <label class="lbl">현재 주행거리 (계기판 ODO)</label>
+        <div class="row">
+          <input id="odo" class="field" type="number" inputmode="numeric" placeholder="예: 123456" />
+          <button class="btn" id="odoSave">저장</button>
+        </div>
+        <div class="list" id="maintList"></div>
+        <p class="hint">교체 주기는 일반적인 값입니다. 차량 취급설명서·정비소 안내가 우선입니다. 타이어 공기압은 운전석 문 옆(B필러) 스티커 값을 따르세요.</p>
+      </section>
+
+      <!-- 설정 -->
+      <section class="screen" data-screen="settings">
+        <h1>설정</h1>
+
+        <h2>즐겨찾는 목적지</h2>
+        <div class="list" id="favEdit"></div>
+        <form class="editor" id="favForm">
+          <input class="field" name="icon" placeholder="🏠" maxlength="4" style="max-width:4.5rem" />
+          <input class="field" name="name" placeholder="이름·주소 (예: 집, 서울역)" required maxlength="40" />
+          <button class="btn" type="button" id="favHere">현재위치</button>
+          <input type="hidden" name="lat" /><input type="hidden" name="lng" />
+          <button class="btn primary" type="submit">추가</button>
+        </form>
+
+        <h2>단축 연락처</h2>
+        <div class="list" id="contactEdit"></div>
+        <form class="editor" id="contactForm">
+          <input class="field" name="name" placeholder="이름" required maxlength="20" />
+          <input class="field" name="phone" type="tel" placeholder="010-0000-0000" required />
+          <button class="btn primary" type="submit">추가</button>
+        </form>
+
+        <h2>기본 앱</h2>
+        <label class="lbl">음악</label>
+        <div class="seg" id="musicAppSeg"></div>
+
+        <h2>데이터</h2>
+        <div class="row">
+          <button class="btn" id="exportBtn">백업 복사</button>
+          <button class="btn" id="importBtn">백업 붙여넣기</button>
+        </div>
+        <p class="hint">모든 설정은 이 아이폰 안에만 저장됩니다 (서버로 보내지 않음).</p>
+        <p class="hint" id="ver"></p>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

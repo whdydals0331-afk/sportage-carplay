@@ -1,0 +1,17 @@
+{
+  "name": "스포티지 드라이브",
+  "short_name": "드라이브",
+  "description": "스포티지 QL 운전 모드 — 길안내·음악·전화·속도계·주차위치·차량관리",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

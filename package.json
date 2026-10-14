@@ -1,0 +1,11 @@
+{
+  "name": "sportage-carplay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "스포티지 QL 카플레이 스타일 운전 모드 (PWA)",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test \"tests/**/*.test.mjs\""
+  }
+}
